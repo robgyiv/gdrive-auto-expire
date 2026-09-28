@@ -1,13 +1,17 @@
 [project]
 name = "gdrive-auto-expire"
 version = "0.1.0"
-description = "Add your description here"
+description = "Share files on Google Drive with a public link that revokes itself"
 readme = "README.md"
 authors = [
     { name = "Robbie R", email = "git@robbie.computer" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "google-api-python-client>=2.200.0",
+    "google-auth>=2.58.1",
+    "google-auth-oauthlib>=1.4.1",
+]
 
 [project.scripts]
 gdrive-auto-expire = "gdrive_auto_expire:main"
@@ -15,3 +19,11 @@ gdrive-auto-expire = "gdrive_auto_expire:main"
 [build-system]
 requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
