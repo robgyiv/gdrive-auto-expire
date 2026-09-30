@@ -163,6 +163,30 @@ def cmd_list(args) -> int:
     return 0
 
 
+def cmd_link(args) -> int:
+    _opportunistic_sweep()
+    data = state.load()
+    shares = data.get("shares", [])
+
+    if args.id:
+        for needle in args.id:
+            print(_resolve(data, needle)["link"] or "(no link)")
+        return 0
+
+    if not args.all:
+        shares = [r for r in shares if state.is_pending(r)]
+    if not shares:
+        print("no active shares" if not args.all else "no shares recorded")
+        return 0
+
+    rows = [
+        [r["id"], r["name"], r["link"] or "-"]
+        for r in sorted(shares, key=lambda r: r["expires_at"])
+    ]
+    print(render_table(rows, ["ID", "NAME", "LINK"]))
+    return 0
+
+
 def _resolve(data: dict, needle: str) -> dict:
     try:
         return state.find(data, needle)
@@ -365,6 +389,13 @@ def build_parser() -> argparse.ArgumentParser:
     listing = sub.add_parser("list", help="show shares and time remaining")
     listing.add_argument("--all", action="store_true", help="include completed shares")
     listing.set_defaults(func=cmd_list)
+
+    link = sub.add_parser("link", help="show shareable links (all, or by id/filename)")
+    link.add_argument(
+        "id", nargs="*", help="share id prefix or filename; omit to list all"
+    )
+    link.add_argument("--all", action="store_true", help="include completed shares when listing")
+    link.set_defaults(func=cmd_link)
 
     revoke = sub.add_parser("revoke", help="expire a share now")
     revoke.add_argument("id", help="share id prefix or filename")

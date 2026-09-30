@@ -60,6 +60,7 @@ sweep is idempotent.
 |---|---|
 | `share --file PATH --days N [--delete] [--folder PATH]` | Upload into the destination folder, make public-with-link, record the deadline. `--days` accepts fractions (`0.01` ≈ 15 minutes), which makes manual testing quick. `--folder` overrides the destination for one share; `--folder ''` uses My Drive root. |
 | `list [--all]` | Active shares with time remaining; `--all` includes completed ones. |
+| `link [ID ...] [--all]` | Shareable links. No id: a table of every active share (`--all` includes completed ones); one or more ids: just the bare link(s), one per line. |
 | `revoke ID` | Expire now, ignoring the deadline. |
 | `extend ID --days N` | Push the deadline out from *now*. |
 | `sweep [--dry-run]` | Process everything due. This is what cron calls. |

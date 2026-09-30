@@ -111,6 +111,57 @@ def test_list_hides_completed_shares_until_all(cli_drive, a_file, capsys):
     assert "cv.pdf" in out and "expired" in out
 
 
+def test_link_with_no_id_lists_active_shares(cli_drive, a_file, capsys):
+    run("share", "--file", str(a_file), "--days", "14")
+    record = state.load()["shares"][0]
+    capsys.readouterr()
+
+    assert run("link") == 0
+    out = capsys.readouterr().out
+    assert "ID" in out and "LINK" in out
+    assert record["id"] in out
+    assert record["link"] in out
+
+
+def test_link_with_no_id_hides_completed_until_all(cli_drive, a_file, capsys):
+    run("share", "--file", str(a_file), "--days", "14")
+    run("revoke", "cv.pdf")
+    capsys.readouterr()
+
+    run("link")
+    assert "no active shares" in capsys.readouterr().out
+
+    run("link", "--all")
+    assert "cv.pdf" in capsys.readouterr().out
+
+
+def test_link_with_id_prints_the_bare_link(cli_drive, a_file, capsys):
+    run("share", "--file", str(a_file), "--days", "14")
+    record = state.load()["shares"][0]
+    capsys.readouterr()
+
+    assert run("link", "cv.pdf") == 0
+    assert capsys.readouterr().out.strip() == record["link"]
+
+
+def test_link_with_multiple_ids_prints_one_link_per_line(cli_drive, a_file, tmp_path, capsys):
+    other = tmp_path / "other.pdf"
+    other.write_text("pretend pdf")
+    run("share", "--file", str(a_file), "--days", "14")
+    run("share", "--file", str(other), "--days", "14")
+    shares = {r["name"]: r for r in state.load()["shares"]}
+    capsys.readouterr()
+
+    assert run("link", "cv.pdf", "other.pdf") == 0
+    lines = capsys.readouterr().out.strip().splitlines()
+    assert lines == [shares["cv.pdf"]["link"], shares["other.pdf"]["link"]]
+
+
+def test_link_with_unknown_id(cli_drive, capsys):
+    assert run("link", "ffff") == 1
+    assert "no share matches" in capsys.readouterr().err
+
+
 def test_revoke_now_ignores_the_deadline(cli_drive, service, a_file, capsys):
     run("share", "--file", str(a_file), "--days", "14")
     file_id = state.load()["shares"][0]["file_id"]
